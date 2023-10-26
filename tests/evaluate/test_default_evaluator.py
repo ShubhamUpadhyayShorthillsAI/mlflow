@@ -3198,10 +3198,10 @@ def test_evaluate_custom_metrics_string_values():
 
 
 def validate_retriever_logged_data(logged_data):
+    print("logged_data", logged_data)
     columns = {
         "question",
-        "outputs",  # TODO: fix the logged data to name the model output column "retrieved_context"
-        # Right now, it's hard-coded "outputs", which is not ideal
+        "retrieved_context",
         "precision_at_k/v1/score",
         "ground_truth",
     }
@@ -3209,7 +3209,7 @@ def validate_retriever_logged_data(logged_data):
     assert set(logged_data.columns.tolist()) == columns
 
     assert logged_data["question"].tolist() == ["q1?", "q1?", "q1?"]
-    assert logged_data["outputs"].tolist() == [["doc1", "doc3", "doc2"]] * 3
+    assert logged_data["retrieved_context"].tolist() == [["doc1", "doc3", "doc2"]] * 3
     assert (logged_data["precision_at_k/v1/score"] <= 1).all()
     assert logged_data["ground_truth"].tolist() == [["doc1", "doc2"]] * 3
 
@@ -3383,7 +3383,7 @@ def test_evaluate_precision_at_k_no_model_type():
     X = pd.DataFrame({"question": ["q1?"] * 3, "ground_truth": [("doc1", "doc2")] * 3})
 
     def fn(X):
-        return pd.DataFrame({"retrieved_context": [("doc1", "doc3", "doc2")] * len(X)})
+        return {"retrieved_context": [("doc1", "doc3", "doc2")] * len(X)}
 
     with mlflow.start_run() as run:
         results = mlflow.evaluate(
